@@ -1,87 +1,149 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React from 'react';
 import {
-    StyleSheet, Text, useColorScheme, View, PermissionsAndroid, SectionList, Image
+    StyleSheet, Text, TouchableOpacity, View, PermissionsAndroid
 } from 'react-native';
 import Contacts from 'react-native-contacts';
+import {AlphabetList} from "react-native-section-alphabet-list";
 
+export default class ContactList extends React.Component {
 
-const ContactList: () => Node = () => {
-    PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-            'title': 'Contacts',
-            'message': 'This app would like to view your contacts.',
-            'buttonPositive': 'Please accept bare mortal'
+    constructor(props) {
+        super(props)
+        this.state = {
+            contacts: [],
+            selectedContacts: [],
+            NumberOfContacts: 0,
+            numberOfSelectedContacts: 0
         }
-    )
+    }
 
+    componentDidMount() {
+        this.requestAccessToContactsPermission();
 
-    return (
-        <View>
+    }
 
-            <SectionList
-                sections={[
-                    {
-                        title: 'H',
-                        data: [
-                            {
-                                image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg',
-                                name: 'Hosam'
-                            },
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Hanan'},
-                            {image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg', name: 'Hayam'},
-                            {image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg', name: 'Haitham'},
-                            {
-                                image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg',
-                                name: 'Hosam'
-                            },
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Hanan'},
-                            {image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg', name: 'Hayam'},
-                            {image: 'https://wtop.com/wp-content/uploads/2018/12/2018TeddyGelmanNOV8-51-150x150.jpg', name: 'Haitham'},
-                        ]
-                    },
+    sendContactsNumDataToHeaderComponent = () => {
+        this.setState({
+            NumberOfContacts: this.state.contacts.length,
+            numberOfSelectedContacts: this.state.selectedContacts.length
+        }, () => {
+            this.props.parentCallback(this.state.NumberOfContacts, this.state.numberOfSelectedContacts);
+        })
+    }
 
-                    {
-                        title: 'D', data: [
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Devin'},
-                            {image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500', name: 'Dan'},
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Dominic'},
-                            {image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500', name: 'Dan'},
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Devin'},
-                            {image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500', name: 'Dan'},
-                            {image: 'https://news.stv.tv/wp-content/uploads/2021/03/5e66fe23e83e012c303bee319b943964-256x256.jpg', name: 'Dominic'},
-                            {image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500', name: 'Dan'},
-                        ]
-                    },
-                ]}
-                renderItem={({item}) => {
-                    return(
-                        <View style={{flexDirection: 'row', margin: 0}}>
-                            <Image source={{uri: item.image}}
-                                   style={{width: 45, height: 45, borderRadius: 100}}/>
-                            <Text style={styles.item}>{item.name}</Text>
-                        </View>
-                    )
+    requestAccessToContactsPermission = async () => {
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+                {
+                    'title': 'Contacts',
+                    'message': 'This app would like to view your contacts.',
+                    'buttonPositive': 'Please accept bare mortal'
                 }
+            ).then(Contacts.getAll()
+                .then((contactList) => this.arrangeContactsArray(contactList)).catch((e) => {
+                    console.log(e)
+                }))
+        } catch (err) {
+            console.warn(err);
+        }
+    }
 
-            }
-                renderSectionHeader={({section}) => <Text style={styles.sectionHeader}>{section.title}</Text>}
-                keyExtractor={(item, index) => index}
-            />
+    arrangeContactsArray(contactList) {
+        let newContactsArray = [];
+        contactList.map((contact, i) => {
+            newContactsArray.push({'value': contact.displayName, 'key': contact.recordID, 'selected': false});
+        });
+        this.setState({contacts: newContactsArray}, () => {
+            this.sendContactsNumDataToHeaderComponent();
+        })
+    }
 
-        </View>
+    removeSelectedContact(array, key, value) {
+        const index = array.findIndex(obj => obj[key] === value);
+        return index >= 0 ? [
+            ...array.slice(0, index),
+            ...array.slice(index + 1)
+        ] : array;
+    }
 
-    );
+
+    render() {
+        return (
+
+            <View>
+                <View style={{flexDirection: 'row'}}>
+                    {this.SelectedContactsSection()}
+                </View>
+
+                <AlphabetList
+                    data={this.state.contacts}
+                    initialNumToRender={5}
+                    indexLetterStyle={{
+                        color: '#3E8ECA',
+                        fontSize: 14
+                    }}
+                    renderCustomItem={(item) => (
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (this.state.selectedContacts.includes(item)) {
+                                    this.setState({selectedContacts: this.removeSelectedContact(this.state.selectedContacts, 'key', item.key)}, () => {
+                                        this.sendContactsNumDataToHeaderComponent();
+                                    })
+                                } else {
+                                    this.setState({selectedContacts: [...this.state.selectedContacts, item]}, () => {
+                                        this.sendContactsNumDataToHeaderComponent();
+                                    });
+                                }
+                            }}
+                            style={{
+                                flexDirection: 'row',
+                                borderBottomColor: '#555',
+                                borderBottomWidth: 1,
+                                marginVertical: 5
+                            }}>
+                            <View style={styles.contactLetterSample}>
+                                <Text>{item.value.charAt(0)}</Text>
+                            </View>
+                            <Text style={styles.contactItem}>{item.value}</Text>
+
+                        </TouchableOpacity>
+                    )}
+                    renderCustomSectionHeader={(section) => (
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionHeaderLabel}>{section.title}</Text>
+                        </View>
+                    )}
+                />
+            </View>
+        );
+    }
+
+    SelectedContactsSection() {
+        return (
+            this.state.selectedContacts.map((contact, i) => {
+                return (
+                    <View key={i} style={{alignItems: 'center', margin: 10}}>
+                        <View style={styles.contactLetterSample}>
+                            <Text>{contact.value.charAt(0)}</Text>
+                        </View>
+                        <Text style={{textAlign: 'center', color: '#fff'}}>{contact.value.substring(0, 7) + ".."}</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                this.setState({selectedContacts: this.removeSelectedContact(this.state.selectedContacts, 'key', contact.key)}, () => {
+                                    this.sendContactsNumDataToHeaderComponent();
+                                });
+                            }}
+                            style={styles.removeSelectedContact}>
+                            <Text style={{color: '#fff'}}>x</Text>
+                        </TouchableOpacity>
+                    </View>
+                )
+            })
+        )
+    }
+
 };
-
 
 const styles = StyleSheet.create({
     sectionHeader: {
@@ -89,16 +151,35 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
         paddingRight: 10,
         paddingBottom: 2,
-        fontSize: 14,
-        fontWeight: 'bold',
         backgroundColor: '#3C3A3F',
     },
-    item: {
+    contactItem: {
         padding: 10,
         fontSize: 18,
-        height: 44,
-        color: '#fff'
+        color: '#fff',
+        marginHorizontal: 5
     },
+    sectionHeaderLabel: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    removeSelectedContact: {
+        position: 'absolute',
+        backgroundColor: '#888',
+        borderRadius: 100,
+        height: 20,
+        width: 20,
+        alignItems: 'center',
+        right: 5,
+    },
+    contactLetterSample: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#ccc',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 100
+    }
 });
 
-export default ContactList;

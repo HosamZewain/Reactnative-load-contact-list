@@ -9,36 +9,25 @@
 import React from 'react';
 import {
     SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    useColorScheme,
-    View,
-    TouchableOpacity,
-    Image
 } from 'react-native';
 import Header from './../Components/Header';
-import ChosenContactsSection from './../Components/ChosenContactsSection';
 import ContactList from './../Components/ContactList';
 
-const Home: () => Node = () => {
-
-    return (
-        <SafeAreaView style={{backgroundColor: "#222", flex: 1}}>
-            <Header/>
-            <ChosenContactsSection/>
-            <ContactList style={{flex: 1}}/>
-
-        </SafeAreaView>
-    );
-};
-
-
-const styles = StyleSheet.create({
-    Button: {
-        backgroundColor: '#00f',
-        textAlign: 'center',
+class Home extends React.Component {
+    state = {TotalContacts: '', selected: ''}
+    callbackFunction = (TotalContacts, selected) => {
+        this.setState({TotalContacts: TotalContacts, selected: selected})
     }
-});
+
+    render() {
+        return (
+            <SafeAreaView style={{backgroundColor: "#333"}}>
+                <Header TotalContacts={this.state.TotalContacts} selected={this.state.selected}/>
+                <ContactList parentCallback={this.callbackFunction}/>
+
+            </SafeAreaView>
+        );
+    }
+};
 
 export default Home;

@@ -8,10 +8,10 @@
 
 import React from 'react';
 import {
-    StyleSheet, Text, useColorScheme, View, TouchableOpacity, TextInput
+    StyleSheet, Text, View, TouchableOpacity
 } from 'react-native';
 
-const Header: () => Node = () => {
+function Header(props) {
 
     return (
         <View style={{backgroundColor: '#39373A'}}>
@@ -22,15 +22,11 @@ const Header: () => Node = () => {
 
                 <View style={{alignItems: 'center'}}>
                     <Text style={styles.HeaderTitle}>Add Participants</Text>
-                    <Text style={styles.HeaderContactCount}>2 / 234</Text>
+                    <Text style={styles.HeaderContactCount}>{props.selected} / {props.TotalContacts}</Text>
                 </View>
                 <TouchableOpacity>
                     <Text style={styles.HeaderButtons}>Next</Text>
                 </TouchableOpacity>
-            </View>
-            <View>
-                <TextInput style={styles.HeaderSearch}
-                placeholder='Search'/>
             </View>
         </View>
 
